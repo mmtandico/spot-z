@@ -248,8 +248,18 @@ else {
   Write-Host ' warning ' -NoNewline -ForegroundColor Yellow; Write-Host 'After clearing backup, Spotify cannot be backed up again'
   Write-Host ' info ' -NoNewline -ForegroundColor Cyan; Write-Host 'Please restore first then backup, run "spot-z restore" or re-install Spotify then run "spot-z backup"'
   
-  Write-Host '1'
+  Write-Host '0'
   Write-Host 'Spot-Z v1.0.0 (Developer: Zax)'
+  
+  # Run actual spot-z application
+  $spotzExe = "$spotzFolderPath\spot-z.exe"
+  if (-not (Test-Path $spotzExe)) {
+    $spotzExe = "$spotzFolderPath\spicetify.exe"
+  }
+  if (Test-Path $spotzExe) {
+    & $spotzExe backup apply | Out-Null
+  }
+
   Write-Host ' success ' -NoNewline -ForegroundColor Green; Write-Host 'Overwrote themed assets'
   Write-Host ' success ' -NoNewline -ForegroundColor Green; Write-Host "Updated theme's styles (spot-z-dark)"
   Write-Host ' success ' -NoNewline -ForegroundColor Green; Write-Host 'Applied additional modifications'
@@ -257,8 +267,27 @@ else {
   
   Write-Host '0'
   Write-Host 'Done!' -ForegroundColor Green
-  Write-Host 'If nothing has happened, check the messages above for errors'
-  Write-Host 'Tip: Restart Spotify Desktop to view your new Spot-Z UI!' -ForegroundColor Cyan
+
+  # Automatically Restart Spotify
+  Write-Host -Object 'Restarting Spotify Desktop...' -ForegroundColor Cyan
+  $spotifyProcesses = Get-Process -Name 'Spotify' -ErrorAction SilentlyContinue
+  if ($spotifyProcesses) {
+    $spotifyProcesses | Stop-Process -Force -ErrorAction SilentlyContinue
+    Start-Sleep -Milliseconds 800
+  }
+
+  $spotifyExe = "$env:APPDATA\Spotify\Spotify.exe"
+  if (Test-Path $spotifyExe) {
+    Start-Process -FilePath $spotifyExe
+  } else {
+    $appxExe = "$env:LOCALAPPDATA\Microsoft\WindowsApps\Spotify.exe"
+    if (Test-Path $appxExe) {
+      Start-Process -FilePath $appxExe
+    } else {
+      Start-Process "spotify:"
+    }
+  }
+  Write-Host -Object 'Spotify restarted with Spot-Z applied!' -ForegroundColor Green
 }
 #endregion SpotZMarketplace
 #endregion Main
