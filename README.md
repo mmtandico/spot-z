@@ -1,15 +1,36 @@
-# ⚡ Spot-Z CLI
-> **Spotify Desktop Customization Engine**  
-> **Developer: Zax**
+<h1 align="center">⚡ spot-Z</h1>
+<p align="center">
+  <strong>Spotify Desktop Customization Engine</strong><br>
+  Developed by <strong>Zax</strong> (<a href="https://github.com/mmtandico">@mmtandico</a>)
+</p>
 
-Command-line tool to customize the official Spotify client with themes, CSS, and extensions.  
-Supports Windows, macOS, and Linux.
+<p align="center">
+  <a href="https://github.com/mmtandico/spot-z"><img src="https://img.shields.io/badge/Project-spot--Z-purple?style=for-the-badge&logo=spotify" alt="Project spot-Z"></a>
+  <a href="https://github.com/mmtandico/spot-z"><img src="https://img.shields.io/badge/Developer-Zax-blue?style=for-the-badge" alt="Developer Zax"></a>
+  <a href="https://github.com/mmtandico/spot-z/releases"><img src="https://img.shields.io/badge/Version-v1.0.0-green?style=for-the-badge" alt="Version 1.0.0"></a>
+</p>
 
 ---
 
-## 🚀 Quick Install (PowerShell)
+## 📖 About spot-Z
 
-Run the following command in PowerShell:
+**spot-Z** is a powerful command-line tool designed to customize, theme, and extend the official Spotify desktop client. Supports Windows, macOS, and Linux.
+
+```
+   ____  ____   ___ _____       _____ 
+  / ___||  _ \ / _ \_   _|     |__  / 
+  \___ \| |_) | | | || | _____   / /  
+   ___) |  __/| |_| || ||_____| / /_  
+  |____/|_|    \___/ |_|       /____| 
+        SPOTIFY UI THEME & EXTENSION ENGINE
+              DEVELOPER: ZAX
+```
+
+---
+
+## 🚀 Quick Install (Windows PowerShell)
+
+Install and configure **spot-Z** with a single command:
 
 ```powershell
 iwr -useb https://raw.githubusercontent.com/mmtandico/spot-z/main/install.ps1 | iex
@@ -19,33 +40,43 @@ iwr -useb https://raw.githubusercontent.com/mmtandico/spot-z/main/install.ps1 | 
 
 ## ✨ Features
 
-- **Custom Themes**: Change colors across the entire Spotify user interface
-- **CSS Injection**: Inject custom CSS for advanced styling, glassmorphism, and layouts
-- **Extensions**: Inject JavaScript extensions to extend functionalities, manipulate UI, and control playback
-- **Custom Apps**: Load custom web apps inside Spotify
-- **Full Control**: Backup, apply, and restore your client at any time
+- **🎨 Theme Customization**: Change color schemes, accents, and styling across the entire Spotify interface.
+- **💎 Glassmorphism & Modern CSS**: Inject custom CSS rules for frosted glass, smooth hover cards, and glowing playback bars.
+- **🧩 Extensions & Plugins**: Inject client-side scripts to expand Spotify functionality and UI controls.
+- **🛍️ In-App Theme Store**: Built-in interactive HUD & Theme Marketplace inside Spotify by **Zax**.
+- **🛡️ Safe & Non-Destructive**: Includes automatic backup and 1-click restore functionality to return to stock Spotify at any time.
 
 ---
 
-## 🛠️ Basic Usage
+## 🛠️ CLI Usage
 
 ```powershell
-# Backup and apply customization
+# Initial setup: create backup and apply styling
 spot-z backup apply
 
-# Re-apply after editing styles or extensions
+# Re-apply after making changes to themes or extensions
 spot-z apply
 
-# Revert Spotify to original stock state
+# Restore Spotify back to factory default
 spot-z restore
 
-# Help & command list
+# Enable Spotify Developer Tools (Inspect Elements)
+spot-z enable-devtools
+
+# Display help and all available commands
 spot-z -h
 ```
 
 ---
 
+## 📁 Repository & Contributing
+
+- **Repository**: [https://github.com/mmtandico/spot-z](https://github.com/mmtandico/spot-z)
+- **Issues & Feedback**: [https://github.com/mmtandico/spot-z/issues](https://github.com/mmtandico/spot-z/issues)
+
+---
+
 ## 📄 License & Credits
 
-- Maintained and customized by **Zax** ([@mmtandico](https://github.com/mmtandico))
+- Developed and maintained by **Zax** ([@mmtandico](https://github.com/mmtandico))
 - Based on the open-source [Spicetify CLI](https://github.com/spicetify/cli) project licensed under **LGPL-2.1**
