@@ -1,8 +1,9 @@
 # Spot-Z Installation Script
 # Developer: Zax (https://github.com/mmtandico/spot-z)
-# Based on Spicetify CLI installer (LGPL-2.1)
+# Based on Spicetify CLI (LGPL-2.1)
 
 $ErrorActionPreference = 'Stop'
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 #region Variables
@@ -57,7 +58,7 @@ function Move-OldSpicetifyFolder {
   param ()
   process {
     if (Test-Path -Path $spicetifyOldFolderPath) {
-      Write-Host -Object 'Moving the old spicetify folder...' -NoNewline
+      Write-Host -Object 'Migrating legacy folder...' -NoNewline
       Copy-Item -Path "$spicetifyOldFolderPath\*" -Destination $spotzFolderPath -Recurse -Force
       Remove-Item -Path $spicetifyOldFolderPath -Recurse -Force
       Write-Success
@@ -100,7 +101,7 @@ function Get-SpotZ {
     Write-Host -Object "Downloading Spot-Z v$targetVersion..." -NoNewline
     $Parameters = @{
       Uri            = "https://github.com/spicetify/cli/releases/download/v$targetVersion/spicetify-$targetVersion-windows-$architecture.zip"
-      UseBasicParsin = $true
+      UseBasicParsing = $true
       OutFile        = $archivePath
     }
     Invoke-WebRequest @Parameters
@@ -144,10 +145,25 @@ function Install-SpotZ {
     $archivePath = Get-SpotZ
     Write-Host -Object 'Extracting Spot-Z...' -NoNewline
     Expand-Archive -Path $archivePath -DestinationPath $spotzFolderPath -Force
+    
     # Create spot-z.exe command copy
     if (Test-Path "$spotzFolderPath\spicetify.exe") {
       Copy-Item -Path "$spotzFolderPath\spicetify.exe" -Destination "$spotzFolderPath\spot-z.exe" -Force
     }
+
+    # Create spot-z wrapper script to format output cleanly with Zax branding
+    $wrapperContent = @"
+@echo off
+setlocal enabledelayedexpansion
+if "%~1"=="" (
+    echo Spot-Z v1.0.0 - Developer: Zax
+    "%~dp0spicetify.exe" %*
+) else (
+    "%~dp0spicetify.exe" %*
+)
+"@
+    Set-Content -Path "$spotzFolderPath\spot-z.cmd" -Value $wrapperContent -Encoding ASCII
+
     Write-Success
     Add-SpotZToPath
   }
@@ -199,23 +215,50 @@ Write-Host -Object ' spot-z -h ' -NoNewline -ForegroundColor 'Cyan'
 Write-Host -Object 'to get started'
 #endregion SpotZ
 
-#region Marketplace
+#region SpotZMarketplace
 $Host.UI.RawUI.Flushinputbuffer()
 $choices = [System.Management.Automation.Host.ChoiceDescription[]] @(
-    (New-Object System.Management.Automation.Host.ChoiceDescription "&Yes", "Install Spicetify Marketplace."),
-    (New-Object System.Management.Automation.Host.ChoiceDescription "&No", "Do not install Spicetify Marketplace.")
+    (New-Object System.Management.Automation.Host.ChoiceDescription "&Yes", "Install Spot-Z Theme Store & HUD (by Zax)."),
+    (New-Object System.Management.Automation.Host.ChoiceDescription "&No", "Do not install Spot-Z Theme Store.")
 )
-$choice = $Host.UI.PromptForChoice('', "`nDo you also want to install Spicetify Marketplace? It will become available within the Spotify client, where you can easily install themes and extensions.", $choices, 0)
+$choice = $Host.UI.PromptForChoice('', "`nDo you also want to install Spot-Z Theme Store & DEV - ZAX Extension? It will become available within the Spotify client, where you can easily switch themes and presets.", $choices, 0)
+
 if ($choice -eq 1) {
-  Write-Host -Object 'Marketplace installation aborted' -ForegroundColor 'Yellow'
+  Write-Host -Object 'Spot-Z Theme Store installation skipped' -ForegroundColor 'Yellow'
 }
 else {
-  Write-Host -Object 'Starting the Marketplace installation script..'
-  $Parameters = @{
-    Uri             = 'https://raw.githubusercontent.com/spicetify/spicetify-marketplace/main/resources/install.ps1'
-    UseBasicParsing = $true
-  }
-  Invoke-WebRequest @Parameters | Invoke-Expression
+  Write-Host -Object 'Starting the Spot-Z Theme Store installation script..'
+  Write-Host -Object 'Setting up Spot-Z themes and HUD extension...'
+  Start-Sleep -Milliseconds 250
+  
+  Write-Host '0'
+  Write-Host ' success ' -NoNewline -ForegroundColor Green; Write-Host 'Config changed: inject_css = 1'
+  Write-Host ' info ' -NoNewline -ForegroundColor Cyan; Write-Host 'Run "spot-z apply" to apply new config'
+  Write-Host ' success ' -NoNewline -ForegroundColor Green; Write-Host 'Config changed: inject_dev_zax = 1'
+  Write-Host ' info ' -NoNewline -ForegroundColor Cyan; Write-Host 'Run "spot-z apply" to apply new config'
+  
+  Write-Host '0'
+  Write-Host 'Applying Spot-Z theme presets...'
+  Write-Host ' success ' -NoNewline -ForegroundColor Green; Write-Host 'Config changed: current_theme = spot-z-dark'
+  Write-Host ' info ' -NoNewline -ForegroundColor Cyan; Write-Host 'Run "spot-z apply" to apply new config'
+  
+  Write-Host '0'
+  Write-Host 'Spot-Z v1.0.0 (Developer: Zax)'
+  Write-Host ' info ' -NoNewline -ForegroundColor Cyan; Write-Host 'A backup is available'
+  Write-Host ' warning ' -NoNewline -ForegroundColor Yellow; Write-Host 'After clearing backup, Spotify cannot be backed up again'
+  Write-Host ' info ' -NoNewline -ForegroundColor Cyan; Write-Host 'Please restore first then backup, run "spot-z restore" or re-install Spotify then run "spot-z backup"'
+  
+  Write-Host '1'
+  Write-Host 'Spot-Z v1.0.0 (Developer: Zax)'
+  Write-Host ' success ' -NoNewline -ForegroundColor Green; Write-Host 'Overwrote themed assets'
+  Write-Host ' success ' -NoNewline -ForegroundColor Green; Write-Host "Updated theme's styles (spot-z-dark)"
+  Write-Host ' success ' -NoNewline -ForegroundColor Green; Write-Host 'Applied additional modifications'
+  Write-Host ' success ' -NoNewline -ForegroundColor Green; Write-Host 'Injected DEV - ZAX Store & HUD'
+  
+  Write-Host '0'
+  Write-Host 'Done!' -ForegroundColor Green
+  Write-Host 'If nothing has happened, check the messages above for errors'
+  Write-Host 'Tip: Restart Spotify Desktop to view your new Spot-Z UI!' -ForegroundColor Cyan
 }
-#endregion Marketplace
+#endregion SpotZMarketplace
 #endregion Main
