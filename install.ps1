@@ -1,7 +1,12 @@
+# Spot-Z Installation Script
+# Developer: Zax (https://github.com/mmtandico/spot-z)
+# Based on Spicetify CLI installer (LGPL-2.1)
+
 $ErrorActionPreference = 'Stop'
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 #region Variables
+$spotzFolderPath = "$env:LOCALAPPDATA\spot-z"
 $spicetifyFolderPath = "$env:LOCALAPPDATA\spicetify"
 $spicetifyOldFolderPath = "$HOME\spicetify-cli"
 #endregion Variables
@@ -53,14 +58,14 @@ function Move-OldSpicetifyFolder {
   process {
     if (Test-Path -Path $spicetifyOldFolderPath) {
       Write-Host -Object 'Moving the old spicetify folder...' -NoNewline
-      Copy-Item -Path "$spicetifyOldFolderPath\*" -Destination $spicetifyFolderPath -Recurse -Force
+      Copy-Item -Path "$spicetifyOldFolderPath\*" -Destination $spotzFolderPath -Recurse -Force
       Remove-Item -Path $spicetifyOldFolderPath -Recurse -Force
       Write-Success
     }
   }
 }
 
-function Get-Spicetify {
+function Get-SpotZ {
   [CmdletBinding()]
   param ()
   begin {
@@ -78,21 +83,21 @@ function Get-Spicetify {
         $targetVersion = $v
       }
       else {
-        Write-Warning -Message "You have specified an invalid spicetify version: $v `nThe version must be in the following format: 1.2.3"
+        Write-Warning -Message "You have specified an invalid version: $v `nThe version must be in the following format: 1.2.3"
         Pause
         exit
       }
     }
     else {
-      Write-Host -Object 'Fetching the latest spicetify version...' -NoNewline
+      Write-Host -Object 'Fetching the latest Spot-Z version...' -NoNewline
       $latestRelease = Invoke-RestMethod -Uri 'https://api.github.com/repos/spicetify/cli/releases/latest'
       $targetVersion = $latestRelease.tag_name -replace 'v', ''
       Write-Success
     }
-    $archivePath = [System.IO.Path]::Combine([System.IO.Path]::GetTempPath(), "spicetify.zip")
+    $archivePath = [System.IO.Path]::Combine([System.IO.Path]::GetTempPath(), "spot-z.zip")
   }
   process {
-    Write-Host -Object "Downloading spicetify v$targetVersion..." -NoNewline
+    Write-Host -Object "Downloading Spot-Z v$targetVersion..." -NoNewline
     $Parameters = @{
       Uri            = "https://github.com/spicetify/cli/releases/download/v$targetVersion/spicetify-$targetVersion-windows-$architecture.zip"
       UseBasicParsin = $true
@@ -106,45 +111,49 @@ function Get-Spicetify {
   }
 }
 
-function Add-SpicetifyToPath {
+function Add-SpotZToPath {
   [CmdletBinding()]
   param ()
   begin {
-    Write-Host -Object 'Making spicetify available in the PATH...' -NoNewline
+    Write-Host -Object 'Making spot-z available in the PATH...' -NoNewline
     $user = [EnvironmentVariableTarget]::User
     $path = [Environment]::GetEnvironmentVariable('PATH', $user)
   }
   process {
     $path = $path -replace "$([regex]::Escape($spicetifyOldFolderPath))\\*;*", ''
-    if ($path -notlike "*$spicetifyFolderPath*") {
-      $path = "$path;$spicetifyFolderPath"
+    if ($path -notlike "*$spotzFolderPath*") {
+      $path = "$path;$spotzFolderPath"
     }
   }
   end {
     [Environment]::SetEnvironmentVariable('PATH', $path, $user)
-    if (($env:PATH -split ';') -notcontains $spicetifyFolderPath) {
-      $env:PATH = "$env:PATH;$spicetifyFolderPath"
+    if (($env:PATH -split ';') -notcontains $spotzFolderPath) {
+      $env:PATH = "$env:PATH;$spotzFolderPath"
     }
     Write-Success
   }
 }
 
-function Install-Spicetify {
+function Install-SpotZ {
   [CmdletBinding()]
   param ()
   begin {
-    Write-Host -Object 'Installing spicetify...'
+    Write-Host -Object 'Installing Spot-Z (by Zax)...'
   }
   process {
-    $archivePath = Get-Spicetify
-    Write-Host -Object 'Extracting spicetify...' -NoNewline
-    Expand-Archive -Path $archivePath -DestinationPath $spicetifyFolderPath -Force
+    $archivePath = Get-SpotZ
+    Write-Host -Object 'Extracting Spot-Z...' -NoNewline
+    Expand-Archive -Path $archivePath -DestinationPath $spotzFolderPath -Force
+    # Create spot-z.exe command copy
+    if (Test-Path "$spotzFolderPath\spicetify.exe") {
+      Copy-Item -Path "$spotzFolderPath\spicetify.exe" -Destination "$spotzFolderPath\spot-z.exe" -Force
+    }
     Write-Success
-    Add-SpicetifyToPath
+    Add-SpotZToPath
   }
   end {
     Remove-Item -Path $archivePath -Force -ErrorAction 'SilentlyContinue'
-    Write-Host -Object 'spicetify was successfully installed!' -ForegroundColor 'Green'
+    Write-Host -Object 'Spot-Z was successfully installed! Developer: Zax' -ForegroundColor 'Green'
   }
 }
 #endregion Functions
@@ -155,16 +164,13 @@ if (-not (Test-PowerShellVersion)) {
   Write-Unsuccess
   Write-Warning -Message 'PowerShell 5.1 or higher is required to run this script'
   Write-Warning -Message "You are running PowerShell $($PSVersionTable.PSVersion)"
-  Write-Host -Object 'PowerShell 5.1 install guide:'
-  Write-Host -Object 'https://learn.microsoft.com/skypeforbusiness/set-up-your-computer-for-windows-powershell/download-and-install-windows-powershell-5-1'
-  Write-Host -Object 'PowerShell 7 install guide:'
-  Write-Host -Object 'https://learn.microsoft.com/powershell/scripting/install/installing-powershell-on-windows'
   Pause
   exit
 }
 else {
   Write-Success
 }
+
 if (-not (Test-Admin)) {
   Write-Unsuccess
   Write-Warning -Message "The script was run as administrator. This can result in problems with the installation process or unexpected behavior. Do not continue if you do not know what you are doing."
@@ -175,7 +181,7 @@ if (-not (Test-Admin)) {
   )
   $choice = $Host.UI.PromptForChoice('', 'Do you want to abort the installation process?', $choices, 0)
   if ($choice -eq 0) {
-    Write-Host -Object 'spicetify installation aborted' -ForegroundColor 'Yellow'
+    Write-Host -Object 'Spot-Z installation aborted' -ForegroundColor 'Yellow'
     Pause
     exit
   }
@@ -185,13 +191,13 @@ else {
 }
 #endregion Checks
 
-#region Spicetify
+#region SpotZ
 Move-OldSpicetifyFolder
-Install-Spicetify
+Install-SpotZ
 Write-Host -Object "`nRun" -NoNewline
-Write-Host -Object ' spicetify -h ' -NoNewline -ForegroundColor 'Cyan'
+Write-Host -Object ' spot-z -h ' -NoNewline -ForegroundColor 'Cyan'
 Write-Host -Object 'to get started'
-#endregion Spicetify
+#endregion SpotZ
 
 #region Marketplace
 $Host.UI.RawUI.Flushinputbuffer()
@@ -201,10 +207,10 @@ $choices = [System.Management.Automation.Host.ChoiceDescription[]] @(
 )
 $choice = $Host.UI.PromptForChoice('', "`nDo you also want to install Spicetify Marketplace? It will become available within the Spotify client, where you can easily install themes and extensions.", $choices, 0)
 if ($choice -eq 1) {
-  Write-Host -Object 'spicetify Marketplace installation aborted' -ForegroundColor 'Yellow'
+  Write-Host -Object 'Marketplace installation aborted' -ForegroundColor 'Yellow'
 }
 else {
-  Write-Host -Object 'Starting the spicetify Marketplace installation script..'
+  Write-Host -Object 'Starting the Marketplace installation script..'
   $Parameters = @{
     Uri             = 'https://raw.githubusercontent.com/spicetify/spicetify-marketplace/main/resources/install.ps1'
     UseBasicParsing = $true

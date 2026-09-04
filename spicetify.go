@@ -371,12 +371,12 @@ Run "spicetify -h" for a list of valid commands.`))
 }
 
 func help() {
-	utils.PrintBold("spicetify v" + version)
+	utils.PrintBold("Spot-Z v" + version + " • Developer: Zax")
 	log.Println(utils.Bold("USAGE") + "\n" +
-		"spicetify [-q] [-e] [-a] \x1B[4mcommand\033[0m...\n" +
-		"spicetify {-c | --config} | {-v | --version} | {-h | --help}\n\n" +
+		"spot-z [-q] [-e] [-a] \x1B[4mcommand\033[0m...\n" +
+		"spot-z {-c | --config} | {-v | --version} | {-h | --help}\n\n" +
 		utils.Bold("DESCRIPTION") + "\n" +
-		"Customize Spotify client UI and functionality\n\n" +
+		"Customize Spotify client UI and functionality • Maintained by Zax\n\n" +
 		utils.Bold("CHAINABLE COMMANDS") + `
 backup              Start backup and preprocessing of app files.
 
@@ -508,8 +508,8 @@ upgrade|update      Update spicetify to the latest version if an update is avail
 
 -v, --version       Print version number and quit
 
-For config information, run "spicetify -h config".
-For more information and reporting bugs: https://github.com/spicetify/cli/`)
+For config information, run "spot-z -h config".
+For more information and reporting bugs: https://github.com/mmtandico/spot-z/`)
 }
 
 func helpConfig() {
