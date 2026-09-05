@@ -1,13 +1,7 @@
-# Spot-Z Installation Script
-# Developer: Zax (https://github.com/mmtandico/spot-z)
-# Based on Spicetify CLI (LGPL-2.1)
-
 $ErrorActionPreference = 'Stop'
-[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 #region Variables
-$spotzFolderPath = "$env:LOCALAPPDATA\spot-z"
 $spicetifyFolderPath = "$env:LOCALAPPDATA\spicetify"
 $spicetifyOldFolderPath = "$HOME\spicetify-cli"
 #endregion Variables
@@ -58,15 +52,15 @@ function Move-OldSpicetifyFolder {
   param ()
   process {
     if (Test-Path -Path $spicetifyOldFolderPath) {
-      Write-Host -Object 'Migrating legacy folder...' -NoNewline
-      Copy-Item -Path "$spicetifyOldFolderPath\*" -Destination $spotzFolderPath -Recurse -Force
+      Write-Host -Object 'Moving the old spicetify folder...' -NoNewline
+      Copy-Item -Path "$spicetifyOldFolderPath\*" -Destination $spicetifyFolderPath -Recurse -Force
       Remove-Item -Path $spicetifyOldFolderPath -Recurse -Force
       Write-Success
     }
   }
 }
 
-function Get-SpotZ {
+function Get-Spicetify {
   [CmdletBinding()]
   param ()
   begin {
@@ -84,24 +78,24 @@ function Get-SpotZ {
         $targetVersion = $v
       }
       else {
-        Write-Warning -Message "You have specified an invalid version: $v `nThe version must be in the following format: 1.2.3"
+        Write-Warning -Message "You have specified an invalid spicetify version: $v `nThe version must be in the following format: 1.2.3"
         Pause
         exit
       }
     }
     else {
-      Write-Host -Object 'Fetching the latest Spot-Z version...' -NoNewline
+      Write-Host -Object 'Fetching the latest spicetify version...' -NoNewline
       $latestRelease = Invoke-RestMethod -Uri 'https://api.github.com/repos/spicetify/cli/releases/latest'
       $targetVersion = $latestRelease.tag_name -replace 'v', ''
       Write-Success
     }
-    $archivePath = [System.IO.Path]::Combine([System.IO.Path]::GetTempPath(), "spot-z.zip")
+    $archivePath = [System.IO.Path]::Combine([System.IO.Path]::GetTempPath(), "spicetify.zip")
   }
   process {
-    Write-Host -Object "Downloading Spot-Z v$targetVersion..." -NoNewline
+    Write-Host -Object "Downloading spicetify v$targetVersion..." -NoNewline
     $Parameters = @{
       Uri            = "https://github.com/spicetify/cli/releases/download/v$targetVersion/spicetify-$targetVersion-windows-$architecture.zip"
-      UseBasicParsing = $true
+      UseBasicParsin = $true
       OutFile        = $archivePath
     }
     Invoke-WebRequest @Parameters
@@ -112,64 +106,45 @@ function Get-SpotZ {
   }
 }
 
-function Add-SpotZToPath {
+function Add-SpicetifyToPath {
   [CmdletBinding()]
   param ()
   begin {
-    Write-Host -Object 'Making spot-z available in the PATH...' -NoNewline
+    Write-Host -Object 'Making spicetify available in the PATH...' -NoNewline
     $user = [EnvironmentVariableTarget]::User
     $path = [Environment]::GetEnvironmentVariable('PATH', $user)
   }
   process {
     $path = $path -replace "$([regex]::Escape($spicetifyOldFolderPath))\\*;*", ''
-    if ($path -notlike "*$spotzFolderPath*") {
-      $path = "$path;$spotzFolderPath"
+    if ($path -notlike "*$spicetifyFolderPath*") {
+      $path = "$path;$spicetifyFolderPath"
     }
   }
   end {
     [Environment]::SetEnvironmentVariable('PATH', $path, $user)
-    if (($env:PATH -split ';') -notcontains $spotzFolderPath) {
-      $env:PATH = "$env:PATH;$spotzFolderPath"
+    if (($env:PATH -split ';') -notcontains $spicetifyFolderPath) {
+      $env:PATH = "$env:PATH;$spicetifyFolderPath"
     }
     Write-Success
   }
 }
 
-function Install-SpotZ {
+function Install-Spicetify {
   [CmdletBinding()]
   param ()
   begin {
-    Write-Host -Object 'Installing Spot-Z (by Zax)...'
+    Write-Host -Object 'Installing spicetify...'
   }
   process {
-    $archivePath = Get-SpotZ
-    Write-Host -Object 'Extracting Spot-Z...' -NoNewline
-    Expand-Archive -Path $archivePath -DestinationPath $spotzFolderPath -Force
-    
-    # Create spot-z.exe command copy
-    if (Test-Path "$spotzFolderPath\spicetify.exe") {
-      Copy-Item -Path "$spotzFolderPath\spicetify.exe" -Destination "$spotzFolderPath\spot-z.exe" -Force
-    }
-
-    # Create spot-z wrapper script to format output cleanly with Zax branding
-    $wrapperContent = @"
-@echo off
-setlocal enabledelayedexpansion
-if "%~1"=="" (
-    echo Spot-Z v1.0.0 - Developer: Zax
-    "%~dp0spicetify.exe" %*
-) else (
-    "%~dp0spicetify.exe" %*
-)
-"@
-    Set-Content -Path "$spotzFolderPath\spot-z.cmd" -Value $wrapperContent -Encoding ASCII
-
+    $archivePath = Get-Spicetify
+    Write-Host -Object 'Extracting spicetify...' -NoNewline
+    Expand-Archive -Path $archivePath -DestinationPath $spicetifyFolderPath -Force
     Write-Success
-    Add-SpotZToPath
+    Add-SpicetifyToPath
   }
   end {
     Remove-Item -Path $archivePath -Force -ErrorAction 'SilentlyContinue'
-    Write-Host -Object 'Spot-Z was successfully installed! Developer: Zax' -ForegroundColor 'Green'
+    Write-Host -Object 'spicetify was successfully installed!' -ForegroundColor 'Green'
   }
 }
 #endregion Functions
@@ -180,13 +155,16 @@ if (-not (Test-PowerShellVersion)) {
   Write-Unsuccess
   Write-Warning -Message 'PowerShell 5.1 or higher is required to run this script'
   Write-Warning -Message "You are running PowerShell $($PSVersionTable.PSVersion)"
+  Write-Host -Object 'PowerShell 5.1 install guide:'
+  Write-Host -Object 'https://learn.microsoft.com/skypeforbusiness/set-up-your-computer-for-windows-powershell/download-and-install-windows-powershell-5-1'
+  Write-Host -Object 'PowerShell 7 install guide:'
+  Write-Host -Object 'https://learn.microsoft.com/powershell/scripting/install/installing-powershell-on-windows'
   Pause
   exit
 }
 else {
   Write-Success
 }
-
 if (-not (Test-Admin)) {
   Write-Unsuccess
   Write-Warning -Message "The script was run as administrator. This can result in problems with the installation process or unexpected behavior. Do not continue if you do not know what you are doing."
@@ -197,7 +175,7 @@ if (-not (Test-Admin)) {
   )
   $choice = $Host.UI.PromptForChoice('', 'Do you want to abort the installation process?', $choices, 0)
   if ($choice -eq 0) {
-    Write-Host -Object 'Spot-Z installation aborted' -ForegroundColor 'Yellow'
+    Write-Host -Object 'spicetify installation aborted' -ForegroundColor 'Yellow'
     Pause
     exit
   }
@@ -207,87 +185,31 @@ else {
 }
 #endregion Checks
 
-#region SpotZ
+#region Spicetify
 Move-OldSpicetifyFolder
-Install-SpotZ
+Install-Spicetify
 Write-Host -Object "`nRun" -NoNewline
-Write-Host -Object ' spot-z -h ' -NoNewline -ForegroundColor 'Cyan'
+Write-Host -Object ' spicetify -h ' -NoNewline -ForegroundColor 'Cyan'
 Write-Host -Object 'to get started'
-#endregion SpotZ
+#endregion Spicetify
 
-#region SpotZMarketplace
+#region Marketplace
 $Host.UI.RawUI.Flushinputbuffer()
 $choices = [System.Management.Automation.Host.ChoiceDescription[]] @(
-    (New-Object System.Management.Automation.Host.ChoiceDescription "&Yes", "Install Spot-Z Theme Store & HUD (by Zax)."),
-    (New-Object System.Management.Automation.Host.ChoiceDescription "&No", "Do not install Spot-Z Theme Store.")
+    (New-Object System.Management.Automation.Host.ChoiceDescription "&Yes", "Install Spicetify Marketplace."),
+    (New-Object System.Management.Automation.Host.ChoiceDescription "&No", "Do not install Spicetify Marketplace.")
 )
-$choice = $Host.UI.PromptForChoice('', "`nDo you also want to install Spot-Z Theme Store & DEV - ZAX Extension? It will become available within the Spotify client, where you can easily switch themes and presets.", $choices, 0)
-
+$choice = $Host.UI.PromptForChoice('', "`nDo you also want to install Spicetify Marketplace? It will become available within the Spotify client, where you can easily install themes and extensions.", $choices, 0)
 if ($choice -eq 1) {
-  Write-Host -Object 'Spot-Z Theme Store installation skipped' -ForegroundColor 'Yellow'
+  Write-Host -Object 'spicetify Marketplace installation aborted' -ForegroundColor 'Yellow'
 }
 else {
-  Write-Host -Object 'Starting the Spot-Z Theme Store installation script..'
-  Write-Host -Object 'Setting up Spot-Z themes and HUD extension...'
-  Start-Sleep -Milliseconds 250
-  
-  Write-Host '0'
-  Write-Host ' success ' -NoNewline -ForegroundColor Green; Write-Host 'Config changed: inject_css = 1'
-  Write-Host ' info ' -NoNewline -ForegroundColor Cyan; Write-Host 'Run "spot-z apply" to apply new config'
-  Write-Host ' success ' -NoNewline -ForegroundColor Green; Write-Host 'Config changed: inject_dev_zax = 1'
-  Write-Host ' info ' -NoNewline -ForegroundColor Cyan; Write-Host 'Run "spot-z apply" to apply new config'
-  
-  Write-Host '0'
-  Write-Host 'Applying Spot-Z theme presets...'
-  Write-Host ' success ' -NoNewline -ForegroundColor Green; Write-Host 'Config changed: current_theme = spot-z-dark'
-  Write-Host ' info ' -NoNewline -ForegroundColor Cyan; Write-Host 'Run "spot-z apply" to apply new config'
-  
-  Write-Host '0'
-  Write-Host 'Spot-Z v1.0.0 (Developer: Zax)'
-  Write-Host ' info ' -NoNewline -ForegroundColor Cyan; Write-Host 'A backup is available'
-  Write-Host ' warning ' -NoNewline -ForegroundColor Yellow; Write-Host 'After clearing backup, Spotify cannot be backed up again'
-  Write-Host ' info ' -NoNewline -ForegroundColor Cyan; Write-Host 'Please restore first then backup, run "spot-z restore" or re-install Spotify then run "spot-z backup"'
-  
-  Write-Host '0'
-  Write-Host 'Spot-Z v1.0.0 (Developer: Zax)'
-  
-  # Run actual spot-z application
-  $spotzExe = "$spotzFolderPath\spot-z.exe"
-  if (-not (Test-Path $spotzExe)) {
-    $spotzExe = "$spotzFolderPath\spicetify.exe"
+  Write-Host -Object 'Starting the spicetify Marketplace installation script..'
+  $Parameters = @{
+    Uri             = 'https://raw.githubusercontent.com/spicetify/spicetify-marketplace/main/resources/install.ps1'
+    UseBasicParsing = $true
   }
-  if (Test-Path $spotzExe) {
-    & $spotzExe backup apply | Out-Null
-  }
-
-  Write-Host ' success ' -NoNewline -ForegroundColor Green; Write-Host 'Overwrote themed assets'
-  Write-Host ' success ' -NoNewline -ForegroundColor Green; Write-Host "Updated theme's styles (spot-z-dark)"
-  Write-Host ' success ' -NoNewline -ForegroundColor Green; Write-Host 'Applied additional modifications'
-  Write-Host ' success ' -NoNewline -ForegroundColor Green; Write-Host 'Injected DEV - ZAX Store & HUD'
-  
-  Write-Host '0'
-  Write-Host 'Done!' -ForegroundColor Green
-
-  # Automatically Restart Spotify
-  Write-Host -Object 'Restarting Spotify Desktop...' -ForegroundColor Cyan
-  $spotifyProcesses = Get-Process -Name 'Spotify' -ErrorAction SilentlyContinue
-  if ($spotifyProcesses) {
-    $spotifyProcesses | Stop-Process -Force -ErrorAction SilentlyContinue
-    Start-Sleep -Milliseconds 800
-  }
-
-  $spotifyExe = "$env:APPDATA\Spotify\Spotify.exe"
-  if (Test-Path $spotifyExe) {
-    Start-Process -FilePath $spotifyExe
-  } else {
-    $appxExe = "$env:LOCALAPPDATA\Microsoft\WindowsApps\Spotify.exe"
-    if (Test-Path $appxExe) {
-      Start-Process -FilePath $appxExe
-    } else {
-      Start-Process "spotify:"
-    }
-  }
-  Write-Host -Object 'Spotify restarted with Spot-Z applied!' -ForegroundColor Green
+  Invoke-WebRequest @Parameters | Invoke-Expression
 }
-#endregion SpotZMarketplace
+#endregion Marketplace
 #endregion Main
